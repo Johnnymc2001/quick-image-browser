@@ -8,9 +8,12 @@ import (
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/driver/desktop"
 	"fyne.io/fyne/v2/layout"
+	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 
+	"github.com/gen2brain/beeep"
 	"github.com/sqweek/dialog"
 )
 
@@ -44,6 +47,10 @@ func parseImageToGrid(g *fyne.Container, path string) {
 		im.FillMode = canvas.ImageFillOriginal
 
 		button := widget.NewButton("", func() {
+			err := beeep.Notify("Quick Image Browser", "Image copied to clipboard!", "./Icon.png")
+			if err != nil {
+				panic(err)
+			}
 			CopyImageToClipboard(imgFix.Path)
 		})
 
@@ -69,6 +76,7 @@ func main() {
 
 	a := app.New()
 	w := a.NewWindow("Image Browser")
+	w.SetIcon(theme.FyneLogo())
 	w.Resize(fyne.NewSize(500, 500))
 
 	g := container.NewGridWrap(fyne.NewSize(100, 100))
@@ -77,7 +85,8 @@ func main() {
 
 	input := widget.NewEntry()
 	input.SetText(currentConfig.LastBrowseFolder)
-	input.Resize(fyne.NewSize(200, 50)) // Set the minimum size of the input field
+	// input.Resize(fyne.NewSize(400, 50))
+
 	input.SetPlaceHolder("Enter path...")
 
 	goButton := widget.NewButton("Go", func() {
@@ -93,10 +102,18 @@ func main() {
 		parseImageToGrid(g, directory)
 	})
 
-	inputContainer := container.NewVBox(input, goButton, browseButton)
-	// inputContainer := container.New(layout.NewGridWrapLayout(fyne.NewSize(100, 50)), input, input, goButton, browseButton)
-	// inputContainer.Resize(fyne.NewSize(500, 500))
-	// c := container.New(layout.NewBorderLayout(inputContainer, s, nil, nil), inputContainer, s)
+	inputContainer := container.NewBorder(input, nil, nil, container.NewHBox(goButton, browseButton))
+
+	// list := widget.NewTable(
+	// 	func() (int, int) {
+	// 		return len(data), len(data[0])
+	// 	},
+	// 	func() fyne.CanvasObject {
+	// 		return widget.NewLabel("wide content")
+	// 	},
+	// 	func(i widget.TableCellID, o fyne.CanvasObject) {
+	// 		o.(*widget.Label).SetText(data[i.Row][i.Col])
+	// 	})
 
 	w.SetContent(container.NewVBox(
 
@@ -109,32 +126,21 @@ func main() {
 			parseImageToGrid(g, currentConfig.LastBrowseFolder)
 		}
 	}()
-	// go func() {
-	// 	currentDir := "/mnt/D/CodingStuff/Go/fyne-ui"
-	// 	images := GetImages(currentDir + "/images")
 
-	// 	for _, img := range images {
-	// 		imgFix := img
+	if desk, ok := a.(desktop.App); ok {
+		desk.SetSystemTrayIcon(theme.FileIcon())
 
-	// 		im := canvas.NewImageFromFile(img.Path)
-	// 		im.FillMode = canvas.ImageFillOriginal
-	// 		fmt.Println(img.Path)
+		m := fyne.NewMenu("Quick Image Browser",
+			fyne.NewMenuItem("Show", func() {
+				w.Show()
+			}))
 
-	// 		button := widget.NewButton("", func() {
-	// 			CopyImageToClipboard(imgFix.Path)
-	// 		})
+		desk.SetSystemTrayMenu(m)
+	}
 
-	// 		container := container.New(
-	// 			layout.NewStackLayout(),
-	// 			button,
-	// 			im,
-	// 		)
-
-	// 		g.Objects = append(g.Objects, container)
-	// 	}
-
-	// 	g.Refresh()
-	// }()
+	w.SetCloseIntercept(func() {
+		w.Hide()
+	})
 
 	w.ShowAndRun()
 }
