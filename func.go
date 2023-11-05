@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"golang.design/x/clipboard"
+	// "github.com/srwiley/rasterx"
 )
 
 func toBase64(b []byte) string {
@@ -63,7 +64,7 @@ func GetImages(directory string) []ImageObj {
 	} else {
 
 		var imageList []ImageObj
-		allowList := []string{"png", "jpg", "jpeg", "svg"}
+		allowList := []string{"png", "jpg", "jpeg"}
 		for _, file := range files {
 			if !file.IsDir() {
 				splits := strings.Split(file.Name(), ".")
@@ -84,6 +85,9 @@ func GetImages(directory string) []ImageObj {
 
 func CopyImageToClipboard(filePath string) {
 	f, err := os.Open(filePath)
+	// splits := strings.Split(filePath, ".")
+	// ext := splits[len(splits)-1]
+
 	if err != nil {
 		panic(err)
 	}
